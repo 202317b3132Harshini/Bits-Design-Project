@@ -1,4 +1,4 @@
-// FINAL THEME TOGGLE – NULL SAFE VERSION
+// FINAL THEME TOGGLE – CLICK SAFE VERSION
 (function () {
   const html = document.documentElement;
 
@@ -13,16 +13,17 @@
     }
   }
 
-  // Always apply theme (never null)
-  const savedTheme = localStorage.getItem("theme");
-  setTheme(savedTheme || "dark");
+  // Apply initial theme (never null)
+  const savedTheme = localStorage.getItem("theme") || "dark";
+  setTheme(savedTheme);
 
-  // Toggle on click
-  document.addEventListener("click", function (e) {
-    if (e.target && e.target.id === "theme-toggle") {
-      const current = html.getAttribute("data-theme") || "dark";
-      setTheme(current === "dark" ? "light" : "dark");
-    }
+  // ✅ FIX: use closest() so clicks on text/emoji also work
+  document.addEventListener("click", function (event) {
+    const toggleBtn = event.target.closest("#theme-toggle");
+    if (!toggleBtn) return;
+
+    const current = html.getAttribute("data-theme") || "dark";
+    const next = current === "dark" ? "light" : "dark";
+    setTheme(next);
   });
 })();
-``
