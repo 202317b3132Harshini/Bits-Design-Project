@@ -1,23 +1,28 @@
-document.addEventListener("DOMContentLoaded", function () {
+// THEME TOGGLE – FINAL STABLE VERSION
 
-  const button = document.getElementById("theme-toggle");
+(function () {
   const html = document.documentElement;
 
-  const savedTheme = localStorage.getItem("theme") || "dark";
-  html.setAttribute("data-theme", savedTheme);
-  updateButton(savedTheme);
+  function applyTheme(theme) {
+    html.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
 
-  button.addEventListener("click", function () {
-    const currentTheme = html.getAttribute("data-theme");
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-
-    html.setAttribute("data-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
-    updateButton(newTheme);
-  });
-
-  function updateButton(theme) {
-    button.textContent =
-      theme === "dark" ? "🌙 Dark Mode" : "☀️ Light Mode";
+    const btn = document.getElementById("theme-toggle");
+    if (btn) {
+      btn.textContent = theme === "dark" ? "🌙 Dark Mode" : "☀️ Light Mode";
+    }
   }
-});
+
+  // Load saved theme
+  const savedTheme = localStorage.getItem("theme") || "dark";
+  applyTheme(savedTheme);
+
+  // Button click handler
+  document.addEventListener("click", function (e) {
+    if (e.target && e.target.id === "theme-toggle") {
+      const current = html.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      applyTheme(next);
+    }
+  });
+})();
