@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-gb" data-color-scheme="light" dir="ltr" translate="no" style="color-scheme: light;">
+<html lang="en-gb" dir="ltr" translate="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,18 +22,10 @@
     }
   }
 
-  body {
-    color-scheme: light;
-  }
-
   body.shouldHideBody {
     visibility: hidden;
   }
 
-  /* handle error root boundary */
-  .root-error-boundary {
-    display: contents;
-  }
 </style>
     
     <!-- Fonts -->
@@ -43,22 +35,12 @@
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./css/theme.css">
     
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        :root {
-            --bg: #0f172a;
-            --sidebar: #1e293b;
-            --accent: #3b82f6;
-            --card: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --positive: #10b981;
-            --warning: #f59e0b;
-        }
 
         * {
             box-sizing: border-box;
@@ -416,7 +398,9 @@
 </head>
 <body class="">
 
-    <div id="loading-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a] transition-opacity duration-1000">
+    <div id="loading-overlay"
+     class="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-1000"
+     style="background: var(--bg);">
         <div class="text-center">
             <div class="inline-block w-12 h-12 border-4 border-slate-800 border-t-blue-500 rounded-full animate-spin"></div>
             <p class="mt-6 loading-text uppercase text-[10px]">Initializing Intelligence Core</p>
@@ -491,6 +475,14 @@
                 <p>India Real Estate corridors simulation.</p>
             </div>
             <div class="flex items-center gap-4">
+                <button
+  id="theme-toggle"
+  class="px-3 py-2 text-xs font-bold rounded-lg border
+         border-[var(--border)]
+         text-[var(--text-main)]
+         hover:bg-[var(--card)]">
+  🌙 Dark Mode
+</button>
                 <div class="hidden md:block text-right">
                     <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Corridors</p>
                     <p class="text-xs font-semibold text-slate-300">Major Districts & Cities</p>
@@ -586,7 +578,7 @@
   await loadLocations();     // ✅ load LOCATIONS first
            async function loadLocations() {
   try {
-    const res = await fetch('./locations.json');
+    const res = await fetch('./public/locations.json');
     LOCATIONS = await res.json();
 
     // OPTIONAL: populate city dropdown dynamically
@@ -870,5 +862,6 @@
             charts.scatter.update();
         }
     </script>
+   <script src="./js/theme.js"></script>
 </body>
 </html>
