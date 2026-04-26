@@ -1,1 +1,22 @@
+/* DARK THEME (DEFAULT) */
+:root,
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --sidebar: #1e293b;
+  --accent: #3b82f6;
+  --card: rgba(255, 255, 255, 0.05);
+  --border: rgba(255, 255, 255, 0.1);
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+}
 
+/* LIGHT THEME */
+[data-theme="light"] {
+  --bg: #ffffff;
+  --sidebar: #f1f5f9;
+  --accent: #2563eb;
+  --card: rgba(0, 0, 0, 0.04);
+  --border: rgba(0, 0, 0, 0.12);
+  --text-main: #0f172a;
+  --text-dim: #475569;
+}
