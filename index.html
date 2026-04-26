@@ -578,7 +578,7 @@
   await loadLocations();     // ✅ load LOCATIONS first
            async function loadLocations() {
   try {
-    const res = await fetch('./public/locations.json');
+    const res = await fetch('./locations.json');
     LOCATIONS = await res.json();
 
     // OPTIONAL: populate city dropdown dynamically
