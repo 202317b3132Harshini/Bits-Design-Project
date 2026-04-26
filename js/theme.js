@@ -1,5 +1,4 @@
 // THEME TOGGLE – FINAL STABLE VERSION
-
 (function () {
   const html = document.documentElement;
 
