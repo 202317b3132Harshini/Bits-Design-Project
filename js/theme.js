@@ -1,8 +1,8 @@
-// FINAL WORKING THEME TOGGLE (GITHUB + VERCEL SAFE)
+// FINAL THEME TOGGLE – NULL SAFE VERSION
 (function () {
   const html = document.documentElement;
 
-  function applyTheme(theme) {
+  function setTheme(theme) {
     html.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
 
@@ -13,16 +13,16 @@
     }
   }
 
-  // Apply saved theme (default = dark)
-  const savedTheme = localStorage.getItem("theme") || "dark";
-  applyTheme(savedTheme);
+  // Always apply theme (never null)
+  const savedTheme = localStorage.getItem("theme");
+  setTheme(savedTheme || "dark");
 
-  // Listen for button clicks (safe for large pages)
-  document.addEventListener("click", function (event) {
-    if (event.target && event.target.id === "theme-toggle") {
-      const currentTheme = html.getAttribute("data-theme");
-      const newTheme = currentTheme === "dark" ? "light" : "dark";
-      applyTheme(newTheme);
+  // Toggle on click
+  document.addEventListener("click", function (e) {
+    if (e.target && e.target.id === "theme-toggle") {
+      const current = html.getAttribute("data-theme") || "dark";
+      setTheme(current === "dark" ? "light" : "dark");
     }
   });
 })();
+``
