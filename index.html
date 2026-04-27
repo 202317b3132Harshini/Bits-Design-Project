@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-gb" data-color-scheme="light" dir="ltr" translate="no" style="color-scheme: light;">
+<html lang="en-gb" data-theme="dark" dir="ltr" translate="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,17 +48,30 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        :root {
-            --bg: #0f172a;
-            --sidebar: #1e293b;
-            --accent: #3b82f6;
-            --card: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --positive: #10b981;
-            --warning: #f59e0b;
-        }
+:root[data-theme="dark"] {
+  --bg: #0f172a;
+  --sidebar: #1e293b;
+  --accent: #3b82f6;
+  --card: rgba(255, 255, 255, 0.05);
+  --border: rgba(255, 255, 255, 0.1);
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --positive: #10b981;
+  --warning: #f59e0b;
+}
+
+:root[data-theme="light"] {
+  --bg: #f8fafc;
+  --sidebar: #ffffff;
+  --accent: #2563eb;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text-main: #0f172a;
+  --text-dim: #475569;
+  --positive: #059669;
+  --warning: #d97706;
+}
+
 
         * {
             box-sizing: border-box;
@@ -416,8 +429,9 @@
 </head>
 <body class="">
 
-    <div id="loading-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a] transition-opacity duration-1000">
-        <div class="text-center">
+<div id="loading-overlay"
+     class="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-1000"
+     style="background: var(--bg)">        <div class="text-center">
             <div class="inline-block w-12 h-12 border-4 border-slate-800 border-t-blue-500 rounded-full animate-spin"></div>
             <p class="mt-6 loading-text uppercase text-[10px]">Initializing Intelligence Core</p>
         </div>
@@ -516,6 +530,19 @@
                 </div>
                 
                 <div class="flex flex-col items-center gap-4">
+                    
+ <!-- your existing buttons/icons -->
+
+  <!-- ✅ THEME TOGGLE BUTTON -->
+  <button
+    id="themeToggle"
+    class="px-3 py-2 rounded-lg border text-[10px] font-bold uppercase tracking-widest"
+    style="background: var(--card); color: var(--text-main); border-color: var(--border);"
+  >
+    🌙 Dark
+  </button>
+</div>
+
                     <div class="gauge-visual">
                         <div id="gauge-fill-ring"></div>
                         <span id="gauge-text">0%</span>
@@ -538,6 +565,17 @@
             <!-- Data Table Snapshot -->
             <div class="card">
                 <div class="flex justify-between items-center mb-6">
+                    
+  <div>
+    <h2 class="text-2xl font-bold">Market Intelligence</h2>
+    <p class="text-sm text-slate-400">India real estate dashboard</p>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <!-- existing buttons/icons are here -->
+  </div>
+</header>
+
                     <span class="chart-title" style="margin-bottom:0">Live Market Dataset Snippet</span>
                     <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2">
                         <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
