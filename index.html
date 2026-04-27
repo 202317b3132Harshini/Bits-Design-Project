@@ -913,7 +913,7 @@ const themeIcon = document.getElementById('theme-icon');
 function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
-    themeIcon.textContent = theme === 'dark' ? '🌙 Dark' : '☀️Light';
+    themeIcon.textContent = theme === 'dark' ? '🌙 ' : '☀️';
 }
 
 function loadTheme() {
