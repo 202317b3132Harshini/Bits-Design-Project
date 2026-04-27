@@ -1,189 +1,239 @@
 <!DOCTYPE html>
 <html lang="en-gb" dir="ltr" translate="no">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>India Real Estate Analyzer | BITS Pilani WILP</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India Real Estate Analyzer | BITS Pilani WILP</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        :root {
-            --bg: #0f172a;
-            --sidebar: #1e293b;
-            --accent: #3b82f6;
-            --card: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --positive: #10b981;
-            --warning: #f59e0b;
-        }
+<style>
+:root {
+    --bg: #0f172a;
+    --sidebar: #1e293b;
+    --accent: #3b82f6;
+    --card: rgba(255,255,255,0.05);
+    --border: rgba(255,255,255,0.1);
+    --text-main: #f8fafc;
+    --text-dim: #94a3b8;
+    --positive: #10b981;
+    --warning: #f59e0b;
+}
 
-        /* ✅ LIGHT THEME */
-        html.light-theme {
-            --bg: #f8fafc;
-            --sidebar: #ffffff;
-            --accent: #2563eb;
-            --card: rgba(0, 0, 0, 0.04);
-            --border: rgba(0, 0, 0, 0.12);
-            --text-main: #0f172a;
-            --text-dim: #475569;
-            --positive: #059669;
-            --warning: #d97706;
-        }
+/* ✅ Light Theme */
+html.light-theme {
+    --bg: #f8fafc;
+    --sidebar: #ffffff;
+    --accent: #2563eb;
+    --card: rgba(0,0,0,0.04);
+    --border: rgba(0,0,0,0.12);
+    --text-main: #0f172a;
+    --text-dim: #475569;
+    --positive: #059669;
+    --warning: #d97706;
+}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-        }
+body {
+    font-family: Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+}
 
-        .sidebar-container {
-            width: 320px;
-            background: var(--sidebar);
-            border-right: 1px solid var(--border);
-            padding: 32px 24px;
-        }
+.sidebar-container {
+    width: 320px;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    padding: 32px 24px;
+}
 
-        .main-content {
-            flex: 1;
-            padding: 32px;
-        }
+.main-content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+}
 
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 28px;
-        }
-
-        label {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            font-weight: 700;
-        }
-
-        select {
-            background: var(--card);
-            border: 1px solid var(--border);
-            padding: 10px;
-            border-radius: 8px;
-            color: var(--text-main);
-        }
-    </style>
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+}
+</style>
 </head>
 
 <body>
 
-<!-- ✅ THEME AWARE LOADER -->
+<!-- Loader -->
 <div id="loading-overlay"
-     class="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-1000"
-     style="background-color: var(--bg);">
-    <span class="uppercase tracking-widest text-xs text-slate-400">
-        Initializing Intelligence Core…
-    </span>
+class="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-1000"
+style="background-color: var(--bg);">
+<p class="text-slate-400 text-xs tracking-widest uppercase">Initializing Intelligence Core</p>
 </div>
 
-<!-- SIDEBAR -->
+<!-- Sidebar -->
 <aside class="sidebar-container">
-    <h1 class="text-lg font-extrabold text-blue-500 mb-6">
-        India Real Estate Analyzer
-    </h1>
+<h1 class="text-lg font-extrabold text-blue-500 mb-6">India Real Estate Analyzer</h1>
 
-    <label>Target City</label>
-    <select id="city-select"></select>
+<label>Target City</label>
+<select id="city-select"></select>
 
-    <label>Locality</label>
-    <select id="locality-select"></select>
+<label class="mt-4">Locality</label>
+<select id="locality-select"></select>
 
-    <label>Square Feet</label>
-    <input type="range" id="sqft-slider" min="500" max="5000" value="1200">
+<label class="mt-4">Square Feet</label>
+<input type="range" id="sqft-slider" min="500" max="5000" value="1200">
 
-    <label>BHK</label>
-    <input type="range" id="bhk-slider" min="1" max="5" value="2">
+<label class="mt-4">Bedrooms (BHK)</label>
+<input type="range" id="bhk-slider" min="1" max="5" value="2">
 
-    <label>Age</label>
-    <input type="range" id="age-slider" min="0" max="30" value="0">
+<label class="mt-4">Property Age</label>
+<input type="range" id="age-slider" min="0" max="30" value="0">
 </aside>
 
-<!-- MAIN -->
+<!-- Main -->
 <main class="main-content">
-    <header class="flex justify-between items-center mb-8">
-        <div>
-            <h2 class="text-2xl font-bold">Market Intelligence</h2>
-            <p class="text-sm text-slate-400">India Real Estate Simulation</p>
-        </div>
+<header class="flex justify-between items-center mb-8">
+<div>
+<h2 class="text-2xl font-bold">Market Intelligence</h2>
+<p class="text-sm text-slate-400">India Real Estate corridors simulation.</p>
+</div>
 
-        <!-- ✅ THEME BUTTON -->
-        <button id="theme-toggle"
-            class="px-3 py-2 text-xs font-bold rounded-lg border
-                   border-[var(--border)]
-                   text-[var(--text-main)]
-                   hover:bg-[var(--card)]">
-            🌙 Dark
-        </button>
-    </header>
+<!-- ✅ Theme Toggle -->
+<button id="theme-toggle"
+class="px-3 py-2 text-xs font-bold rounded-lg border border-[var(--border)]
+text-[var(--text-main)] hover:bg-[var(--card)]">
+🌙 Dark
+</button>
+</header>
 
-    <div class="card mb-8">
-        <span class="text-xs uppercase text-blue-400">Estimated Market Value</span>
-        <h3 class="text-5xl font-extrabold">
-            ₹<span id="predicted-price">0</span>
-        </h3>
-    </div>
+<div class="card mb-8">
+<span class="text-xs uppercase text-blue-400">Estimated Market Value</span>
+<h3 class="text-5xl font-extrabold">
+₹<span id="predicted-price">0</span>
+</h3>
+<span id="market-tag" class="inline-block mt-2 px-3 py-1 rounded-full text-xs"></span>
+</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="card"><canvas id="barChart"></canvas></div>
-        <div class="card"><canvas id="scatterChart"></canvas></div>
-    </div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="card"><canvas id="barChart"></canvas></div>
+<div class="card"><canvas id="scatterChart"></canvas></div>
+</div>
 </main>
 
 <script>
 let LOCATIONS = {};
-const root = document.documentElement;
+let marketData = [];
+let charts = {};
+const WEIGHTS = { bedroom: 0.12, agePenalty: 0.015 };
 
 window.onload = async () => {
 
-  /* ✅ THEME LOGIC */
-  const themeBtn = document.getElementById('theme-toggle');
+  /* ✅ THEME (SAFE) */
+  const root = document.documentElement;
+  const themeBtn = document.getElementById("theme-toggle");
 
   function applyTheme(theme) {
-    if (theme === 'light') {
-      root.classList.add('light-theme');
-      themeBtn.textContent = '☀️ Light';
+    if (theme === "light") {
+      root.classList.add("light-theme");
+      themeBtn.textContent = "☀️ Light";
     } else {
-      root.classList.remove('light-theme');
-      themeBtn.textContent = '🌙 Dark';
+      root.classList.remove("light-theme");
+      themeBtn.textContent = "🌙 Dark";
     }
-    localStorage.setItem('theme', theme);
+    localStorage.setItem("theme", theme);
   }
 
-  applyTheme(localStorage.getItem('theme') || 'dark');
+  applyTheme(localStorage.getItem("theme") || "dark");
 
-  themeBtn.onclick = () => {
-    applyTheme(root.classList.contains('light-theme') ? 'dark' : 'light');
-  };
+  themeBtn.onclick = () =>
+    applyTheme(root.classList.contains("light-theme") ? "dark" : "light");
 
-  /* ✅ DATA LOAD */
-  const res = await fetch('/locations.json');
+  /* ✅ LOAD DATA */
+  const res = await fetch("/locations.json");
   LOCATIONS = await res.json();
 
-  document.getElementById('loading-overlay').style.display = 'none';
+  populateCities();
+  populateLocalities();
+  generateDataset();
+  initCharts();
+  updatePrediction();
+
+  document.getElementById("loading-overlay").style.display = "none";
 };
+
+function populateCities() {
+  const city = document.getElementById("city-select");
+  Object.keys(LOCATIONS).forEach(c => {
+    const o = document.createElement("option");
+    o.value = c;
+    o.textContent = c;
+    city.appendChild(o);
+  });
+}
+
+function populateLocalities() {
+  const loc = document.getElementById("locality-select");
+  loc.innerHTML = "";
+  Object.keys(LOCATIONS[city-select.value].localities).forEach(l => {
+    const o = document.createElement("option");
+    o.value = l;
+    o.textContent = l;
+    loc.appendChild(o);
+  });
+}
+
+function calculatePrice(city, locality, sqft, bhk, age) {
+  let price = LOCATIONS[city].basePrice * sqft *
+              LOCATIONS[city].localities[locality];
+  price *= 1 + (bhk - 1) * WEIGHTS.bedroom;
+  price *= 1 - age * WEIGHTS.agePenalty;
+  return Math.round(price);
+}
+
+function generateDataset() {
+  marketData = [];
+  Object.keys(LOCATIONS).forEach(city => {
+    Object.keys(LOCATIONS[city].localities).forEach(loc => {
+      marketData.push({
+        city,
+        locality: loc,
+        sqft: 1200,
+        bhk: 2,
+        age: 0,
+        price: calculatePrice(city, loc, 1200, 2, 0)
+      });
+    });
+  });
+}
+
+function updatePrediction() {
+  const price = calculatePrice(
+    city-select.value,
+    locality-select.value,
+    +sqft-slider.value,
+    +bhk-slider.value,
+    +age-slider.value
+  );
+  document.getElementById("predicted-price")
+    .textContent = price.toLocaleString("en-IN");
+}
+
+function initCharts() {
+  charts.bar = new Chart(barChart, { type: "bar", data: { labels: [], datasets:[{data:[]}] }});
+  charts.scatter = new Chart(scatterChart, { type: "scatter", data: { datasets:[{data:[]}] }});
+}
 </script>
 
 </body>
 </html>
-``
