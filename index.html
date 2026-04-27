@@ -59,18 +59,6 @@
             --positive: #10b981;
             --warning: #f59e0b;
         }
-/* Light Theme Variables */
-html.light-theme {
-    --bg: #f8fafc;
-    --sidebar: #ffffff;
-    --accent: #2563eb;
-    --card: rgba(0, 0, 0, 0.04);
-    --border: rgba(0, 0, 0, 0.12);
-    --text-main: #0f172a;
-    --text-dim: #475569;
-    --positive: #059669;
-    --warning: #d97706;
-}
 
         * {
             box-sizing: border-box;
@@ -428,9 +416,7 @@ html.light-theme {
 </head>
 <body class="">
 
-<div id="loading-overlay"
-     class="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-1000"
-     style="background-color: var(--bg);">
+    <div id="loading-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a] transition-opacity duration-1000">
         <div class="text-center">
             <div class="inline-block w-12 h-12 border-4 border-slate-800 border-t-blue-500 rounded-full animate-spin"></div>
             <p class="mt-6 loading-text uppercase text-[10px]">Initializing Intelligence Core</p>
@@ -505,12 +491,6 @@ html.light-theme {
                 <p>India Real Estate corridors simulation.</p>
             </div>
             <div class="flex items-center gap-4">
-                <button
-  id="theme-toggle"
-  class="px-3 py-2 rounded-full border border-slate-500 text-xs font-bold tracking-wider
-         bg-slate-800 text-slate-200 hover:bg-slate-700 transition">
-  🌙 DARK
-</button>
                 <div class="hidden md:block text-right">
                     <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Corridors</p>
                     <p class="text-xs font-semibold text-slate-300">Major Districts & Cities</p>
@@ -585,37 +565,7 @@ html.light-theme {
     </main>
 
     <!-- Scripting -->
-    
     <script>
-        // ----------------------------------
-// DARK / LIGHT THEME TOGGLE
-// ----------------------------------
-const root = document.documentElement;
-
-window.addEventListener('DOMContentLoaded', () => {
-    const themeBtn = document.getElementById('theme-toggle');
-
-    function applyTheme(theme) {
-        if (theme === 'light') {
-            root.classList.add('light-theme');
-            themeBtn.textContent = '☀️ LIGHT';
-        } else {
-            root.classList.remove('light-theme');
-            themeBtn.textContent = '🌙 DARK';
-        }
-        localStorage.setItem('theme', theme);
-    }
-
-    // Load saved theme
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    applyTheme(savedTheme);
-
-    // Toggle theme on click
-    themeBtn.addEventListener('click', () => {
-        const isLight = root.classList.contains('light-theme');
-        applyTheme(isLight ? 'dark' : 'light');
-    });
-});
         // ---------------------------------------------------------
         // DATASET & CONSTANTS
         // ---------------------------------------------------------
