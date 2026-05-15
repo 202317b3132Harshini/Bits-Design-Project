@@ -611,31 +611,34 @@
     <!-- Scripting -->
     <script>
 // --- LOGIN GUARD ---
-  const user = localStorage.getItem("loggedInUser");
-  if (!user) window.location.href = "/"; // login page
+const user = localStorage.getItem("loggedInUser");
+const guestMode = localStorage.getItem("guestMode");
+if (!user && !guestMode) window.location.href = "/";
 
-  // --- LAST LOGIN DISPLAY ---
-  function formatDate(iso) {
-    return new Date(iso).toLocaleString();
-  }
+// --- LAST INFO DISPLAY ---
+function formatDate(iso) { return new Date(iso).toLocaleString(); }
 
-  const userEmail = localStorage.getItem("loggedInUser");
-  const previous = localStorage.getItem("previousLoginForSession");
-  const loginInfo = document.getElementById("loginInfo");
+const previous = localStorage.getItem("previousLoginForSession");
+const loginInfo = document.getElementById("loginInfo");
 
-if (loginInfo && userEmail) {
+if (loginInfo) {
+  if (guestMode) {
+    loginInfo.innerHTML = `You are browsing as <b>Guest</b>.`;
+  } else if (user) {
     loginInfo.innerHTML = previous
-      ? `Signed in as <b>${userEmail}</b> — Last login: <b>${formatDate(previous)}</b>`
-      : `Signed in as <b>${userEmail}</b> — This is your <b>first login</b>.`;
+      ? `Signed in as <b>${user}</b> — Last login: <b>${formatDate(previous)}</b>`
+      : `Signed in as <b>${user}</b> — This is your <b>first login</b>.`;
   }
+}
 
-  // --- LOGOUT ---
-  function logout() {
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("previousLoginForSession");
-    window.location.href = "/";
-  }
-        
+// --- LOGOUT ---
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  localStorage.removeItem("guestMode");
+  localStorage.removeItem("previousLoginForSession");
+  window.location.href = "/";
+}
+ 
         // ---------------------------------------------------------
         // DATASET & CONSTANTS
         // ---------------------------------------------------------
@@ -652,8 +655,160 @@ if (loginInfo && userEmail) {
         // ---------------------------------------------------------
         // INITIALIZATION
         // ---------------------------------------------------------
+        async function loadCSVData() {
+  try {
+    const res = await fetch('/marketData.csv');
+    const text = await res.text();
+
+    const rows = text.split('\n').slice(1); // skip header
+
+    marketData = rows.map(row => {
+      const cols = row.split(',');
+
+      return {
+        city: cols[0],
+        locality: cols[1],
+        sqft: parseFloat(cols[2]),
+        bhk: parseInt(cols[3]),
+        age: parseInt(cols[4]),
+        price: parseFloat(cols[5]),
+        basePrice: parseFloat(cols[6]),
+        locMultiplier: parseFloat(cols[7])
+      };
+    }).filter(d => !isNaN(d.sqft));
+
+    console.log("✅ CSV Data Loaded:", marketData);
+
+  } catch (err) {
+    console.error("❌ Error loading CSV:", err);
+  }
+}
+        // ---------------------------------------------------------
+// LINEAR REGRESSION (Frontend - Gradient Descent)
+// ---------------------------------------------------------
+let model = { w: [], b: 0 };
+let featureMeans = [];
+let featureStds = [];
+
+// Convert a marketData row into feature vector
+function toFeatures(row) {
+  return [
+    row.sqft,
+    row.bhk,
+    row.age,
+    row.basePrice,
+    row.locMultiplier
+  ];
+}
+
+// Standardize features (important for stable training)
+function fitStandardizer(X) {
+  const nFeatures = X[0].length;
+  featureMeans = new Array(nFeatures).fill(0);
+  featureStds  = new Array(nFeatures).fill(0);
+
+  // mean
+  for (let j = 0; j < nFeatures; j++) {
+    let sum = 0;
+    for (let i = 0; i < X.length; i++) sum += X[i][j];
+    featureMeans[j] = sum / X.length;
+  }
+
+  // std
+  for (let j = 0; j < nFeatures; j++) {
+    let sumSq = 0;
+    for (let i = 0; i < X.length; i++) {
+      const diff = X[i][j] - featureMeans[j];
+      sumSq += diff * diff;
+    }
+    featureStds[j] = Math.sqrt(sumSq / X.length) || 1; // avoid divide by 0
+  }
+}
+
+function transformStandardizer(x) {
+  return x.map((val, j) => (val - featureMeans[j]) / featureStds[j]);
+}
+
+// Train Linear Regression using Gradient Descent
+function trainLinearRegression() {
+  if (!marketData || marketData.length < 20) {
+    console.warn("Not enough data to train.");
+    return;
+  }
+
+  // Build X, y
+  const Xraw = marketData.map(d => toFeatures(d));
+  const y = marketData.map(d => d.price);
+
+  // Fit standardizer and transform X
+  fitStandardizer(Xraw);
+  const X = Xraw.map(transformStandardizer);
+
+  const nSamples = X.length;
+  const nFeatures = X[0].length;
+
+  // Initialize weights
+  model.w = new Array(nFeatures).fill(0);
+  model.b = 0;
+
+  const lr = 0.05;       // learning rate
+  const epochs = 350;    // iterations
+
+  for (let epoch = 0; epoch < epochs; epoch++) {
+    // gradients
+    let dw = new Array(nFeatures).fill(0);
+    let db = 0;
+
+    for (let i = 0; i < nSamples; i++) {
+      // prediction
+      let yhat = model.b;
+      for (let j = 0; j < nFeatures; j++) yhat += model.w[j] * X[i][j];
+
+      const err = (yhat - y[i]);
+      db += err;
+      for (let j = 0; j < nFeatures; j++) dw[j] += err * X[i][j];
+    }
+
+    // Average gradients
+    db /= nSamples;
+    for (let j = 0; j < nFeatures; j++) dw[j] /= nSamples;
+
+    // Update params
+    model.b -= lr * db;
+    for (let j = 0; j < nFeatures; j++) model.w[j] -= lr * dw[j];
+
+    // Optional: small log
+    if (epoch % 100 === 0) {
+      console.log(`Training epoch ${epoch}/${epochs}`);
+    }
+  }
+
+  console.log("✅ Linear Regression trained!", model);
+}
+
+// Predict price using trained model
+function predictPriceML(city, locality, sqft, bhk, age) {
+  // Find basePrice & locMultiplier for selected city/locality from LOCATIONS
+  const cityData = LOCATIONS[city];
+  const basePrice = cityData?.basePrice || 0;
+  const locMultiplier = cityData?.localities?.[locality] ?? 1;
+
+  let ageAdjusted = -age; // ✅ important fix
+  let x = [sqft, bhk, ageAdjusted, basePrice, locMultiplier];
+  x = transformStandardizer(x);
+
+  let yhat = model.b;
+  for (let j = 0; j < model.w.length; j++) yhat += model.w[j] * x[j];
+
+  // Safety clamp
+  if (!isFinite(yhat)) yhat = 0;
+  return Math.max(0, Math.round(yhat));
+}
+        //-----------------------------
        window.onload = async () => {
-  await loadLocations();     // ✅ load LOCATIONS first
+           await loadLocations();     // ✅ load LOCATIONS first
+           await loadCSVData();
+           trainLinearRegression();
            async function loadLocations() {
   try {
     const res = await fetch('/locations.json');
@@ -667,7 +822,6 @@ if (loginInfo && userEmail) {
     alert("Unable to load locations file. Run using Live Server / local server.");
   }
 }
-  generateDataset();
   populateLocalities();
   initCharts();
   setupEventListeners();
@@ -728,7 +882,7 @@ if (loginInfo && userEmail) {
                 const bhk = sqft < 1000 ? 1 : (sqft < 1800 ? 2 : (sqft < 2500 ? 3 : 4));
                 const age = Math.floor(Math.random() * 25);
                 
-                const price = calculatePrice(city, locality, sqft, bhk, age);
+                const price = predictPriceML(city, locality, sqft, bhk, age);
                 
                 marketData.push({ city, locality, sqft, bhk, age, price });
             }
@@ -758,7 +912,10 @@ if (loginInfo && userEmail) {
             
             inputs.forEach(id => {
                 document.getElementById(id).addEventListener('input', (e) => {
-                    if (id === 'city-select') populateLocalities();
+                    if (id === 'city-select') {
+  populateLocalities();
+  populateTable();
+}
                     
                     // Update value displays
                     if (id === 'sqft-slider') document.getElementById('sqft-val').textContent = e.target.value;
@@ -774,52 +931,68 @@ if (loginInfo && userEmail) {
         function formatCurrency(val) {
             return new Intl.NumberFormat('en-IN').format(val);
         }
+        
+        function hasTrainingData(city, locality) {
+  return marketData.some(d => d.city === city && d.locality === locality);
+}
+        function safePredictPrice(city, locality, sqft, bhk, age) {
+  // Try ML first ONLY if locality has training rows
+  if (hasTrainingData(city, locality)) {
+    const mlPrice = predictPriceML(city, locality, sqft, bhk, age);
 
-        function updatePrediction() {
-            const city = document.getElementById('city-select').value;
-            const locality = document.getElementById('locality-select').value;
-            const sqft = parseInt(document.getElementById('sqft-slider').value);
-            const bhk = parseInt(document.getElementById('bhk-slider').value);
-            const age = parseInt(document.getElementById('age-slider').value);
-            
-            const price = calculatePrice(city, locality, sqft, bhk, age);
-            
-            // Animate price counter
-            const priceEl = document.getElementById('predicted-price');
-            const startVal = parseInt(priceEl.textContent.replace(/,/g, '')) || 0;
-            animateValue(priceEl, startVal, price, 600);
-            
-            // Adjust market tag and gauge
-            let tag = document.getElementById('market-tag');
-            let gaugeRing = document.getElementById('gauge-fill-ring');
-            let gaugeText = document.getElementById('gauge-text');
-            
-            const pricePerSqft = price / sqft;
-            // Range 3000 to 13000 as typical range for visualization
-            let percentage = Math.round(((pricePerSqft - 3000) / 10000) * 100);
-            percentage = Math.max(0, Math.min(100, percentage));
-            
-            gaugeText.textContent = percentage + '%';
-            
-            // Update circular gauge using conic gradient for smooth visual
-            gaugeRing.style.background = `conic-gradient(var(--accent) ${percentage * 3.6}deg, transparent 0deg)`;
-            gaugeRing.style.border = 'none'; // Overriding the previous border logic
+    // If ML gives 0 or nonsense → fallback
+    if (mlPrice > 0 && Number.isFinite(mlPrice)) {
+      return mlPrice;
+    }
+  }
 
-            if (percentage < 35) {
-                tag.textContent = 'Highly Affordable';
-                tag.style.color = '#10b981';
-                tag.style.background = 'rgba(16, 185, 129, 0.1)';
-            } else if (percentage < 70) {
-                tag.textContent = 'Market Moderate';
-                tag.style.color = '#3b82f6';
-                tag.style.background = 'rgba(59, 130, 246, 0.1)';
-            } else {
-                tag.textContent = 'Premium Segment';
-                tag.style.color = '#f59e0b';
-                tag.style.background = 'rgba(245, 158, 11, 0.1)';
-            }
-        }
+  // Fallback rule-based (always non-zero)
+  return calculatePrice(city, locality, sqft, bhk, age);
+}
+function updatePrediction() {
+  const city = document.getElementById('city-select').value;
+  const locality = document.getElementById('locality-select').value;
+  const sqft = parseInt(document.getElementById('sqft-slider').value);
+  const bhk = parseInt(document.getElementById('bhk-slider').value);
+  const age = parseInt(document.getElementById('age-slider').value);
 
+  const useML = hasTrainingData(city, locality);
+
+  const price = safePredictPrice(city, locality, sqft, bhk, age);
+
+  // Animate price counter
+  const priceEl = document.getElementById('predicted-price');
+  const startVal = parseInt(priceEl.textContent.replace(/,/g, '')) || 0;
+  animateValue(priceEl, startVal, price, 600);
+
+  // Adjust market tag and gauge (no fallback message)
+  const tag = document.getElementById('market-tag');
+  const gaugeRing = document.getElementById('gauge-fill-ring');
+  const gaugeText = document.getElementById('gauge-text');
+
+  const pricePerSqft = price / sqft;
+  let percentage = Math.round(((pricePerSqft - 3000) / 10000) * 100);
+  percentage = Math.max(0, Math.min(100, percentage));
+  gaugeText.textContent = percentage + '%';
+
+  gaugeRing.style.background = `conic-gradient(var(--accent) ${percentage * 3.6}deg, transparent 0deg)`;
+  gaugeRing.style.border = 'none';
+
+  // Keep your original affordability labels
+  if (percentage < 35) {
+    tag.textContent = 'Highly Affordable';
+    tag.style.color = '#10b981';
+    tag.style.background = 'rgba(16, 185, 129, 0.1)';
+  } else if (percentage < 70) {
+    tag.textContent = 'Market Moderate';
+    tag.style.color = '#3b82f6';
+    tag.style.background = 'rgba(59, 130, 246, 0.1)';
+  } else {
+    tag.textContent = 'Premium Segment';
+    tag.style.color = '#f59e0b';
+    tag.style.background = 'rgba(245, 158, 11, 0.1)';
+  }
+}
         function animateValue(obj, start, end, duration) {
             let startTimestamp = null;
             const step = (timestamp) => {
@@ -834,26 +1007,40 @@ if (loginInfo && userEmail) {
             window.requestAnimationFrame(step);
         }
 
-        function populateTable() {
-            const tbody = document.getElementById('data-table-body');
-            tbody.innerHTML = '';
-            
-            // Take 5 random samples
-            const samples = marketData.sort(() => 0.5 - Math.random()).slice(0, 5);
-            
-            samples.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="font-medium" style="color: var(--text-main)">${row.city}</td>
-                    <td style="color: var(--text-dim)">${row.locality}</td>
-                    <td style="color: var(--text-dim)">${row.bhk} BHK</td>
-                    <td style="color: var(--text-dim)">${row.sqft} ft²</td>
-                    <td class="font-bold" style="color: var(--accent)">₹${formatCurrency(row.price)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+       function populateTable() {
+  const tbody = document.getElementById('data-table-body');
+  tbody.innerHTML = '';
 
+  const currentCity = document.getElementById('city-select').value;
+  const citySpecificData = marketData.filter(d => d.city === currentCity);
+
+  // If no rows for this city, show a friendly message
+  if (citySpecificData.length === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td colspan="5" style="color: var(--text-dim); padding: 18px;">
+        No dataset rows found for <b>${currentCity}</b>. Please choose another city.
+      </td>
+    `;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  // Take 5 random samples from that city
+  const samples = citySpecificData.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+  samples.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="font-medium" style="color: var(--text-main)">${row.city}</td>
+      <td style="color: var(--text-dim)">${row.locality}</td>
+      <td style="color: var(--text-dim)">${row.bhk} BHK</td>
+      <td style="color: var(--text-dim)">${row.sqft} ft²</td>
+      <td class="font-bold" style="color: var(--accent)">₹${formatCurrency(row.price)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
         // ---------------------------------------------------------
         // DATA VISUALIZATION
         // ---------------------------------------------------------
@@ -914,31 +1101,53 @@ if (loginInfo && userEmail) {
             updateCharts();
         }
 
-        function updateCharts() {
-            const currentCity = document.getElementById('city-select').value;
-            const citySpecificData = marketData.filter(d => d.city === currentCity);
-            
-            // Update Bar Chart (Avg price by locality in current city)
-            const localities = Object.keys(LOCATIONS[currentCity].localities);
-            const avgPrices = localities.map(loc => {
-                const locData = citySpecificData.filter(d => d.locality === loc);
-                const sum = locData.reduce((acc, d) => acc + (d.price / d.sqft), 0);
-                return Math.round(sum / locData.length) || 0;
-            });
+       function updateCharts() {
+  const currentCity = document.getElementById('city-select').value;
+  const cityData = marketData.filter(d => d.city === currentCity);
 
-            charts.bar.data.labels = localities;
-            charts.bar.data.datasets[0].data = avgPrices;
-            charts.bar.update();
+  // If no data, clear charts
+  if (!cityData.length) {
+    charts.bar.data.labels = [];
+    charts.bar.data.datasets[0].data = [];
+    charts.bar.update();
 
-            // Update Scatter (All data for city)
-            const scatterPoints = citySpecificData.map(d => ({
-                x: d.sqft,
-                y: d.price / 100000 // In Lakhs
-            }));
-            
-            charts.scatter.data.datasets[0].data = scatterPoints;
-            charts.scatter.update();
-        }
+    charts.scatter.data.datasets[0].data = [];
+    charts.scatter.update();
+    return;
+  }
+
+  // ✅ Build avg price/sqft by locality ONLY using available dataset localities
+  const localityMap = {}; // { locality: {sum, count} }
+
+  cityData.forEach(d => {
+    if (!d.locality || !d.sqft || !d.price) return;
+    const ppsf = d.price / d.sqft;
+    if (!isFinite(ppsf)) return;
+
+    if (!localityMap[d.locality]) localityMap[d.locality] = { sum: 0, count: 0 };
+    localityMap[d.locality].sum += ppsf;
+    localityMap[d.locality].count += 1;
+  });
+
+  // Convert to arrays + sort by avg desc
+  const entries = Object.entries(localityMap)
+    .map(([loc, obj]) => ({ loc, avg: Math.round(obj.sum / obj.count) }))
+    .sort((a, b) => b.avg - a.avg)
+    .slice(0, 10); // show top 10 only (looks clean)
+
+  charts.bar.data.labels = entries.map(e => e.loc);
+  charts.bar.data.datasets[0].data = entries.map(e => e.avg);
+  charts.bar.update();
+
+  // ✅ Scatter plot (sqft vs price in lakhs)
+  const scatterPoints = cityData
+    .filter(d => isFinite(d.sqft) && isFinite(d.price))
+    .slice(0, 250) // keep chart fast
+    .map(d => ({ x: d.sqft, y: d.price / 100000 }));
+
+  charts.scatter.data.datasets[0].data = scatterPoints;
+  charts.scatter.update();
+}
         // ===== DARK / LIGHT THEME LOGIC =====
 
 const themeToggle = document.getElementById('theme-toggle');
