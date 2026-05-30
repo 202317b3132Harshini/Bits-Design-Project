@@ -971,27 +971,35 @@ function updatePrediction() {
   const gaugeText = document.getElementById('gauge-text');
 
   const pricePerSqft = price / sqft;
-  let percentage = Math.round(((pricePerSqft - 3000) / 10000) * 100);
-  percentage = Math.max(0, Math.min(100, percentage));
+
+// Define realistic range
+const minPrice = 3000;   // affordable base
+const maxPrice = 15000;  // premium/high-end
+
+let percentage = Math.round(
+  (1 - (pricePerSqft - minPrice) / (maxPrice - minPrice)) * 100
+);
+
+// Clamp values between 0 and 100
+percentage = Math.max(0, Math.min(100, percentage));
   gaugeText.textContent = percentage + '%';
 
   gaugeRing.style.background = `conic-gradient(var(--accent) ${percentage * 3.6}deg, transparent 0deg)`;
   gaugeRing.style.border = 'none';
 
   // Keep your original affordability labels
-  if (percentage < 35) {
-    tag.textContent = 'Highly Affordable';
-    tag.style.color = '#10b981';
-    tag.style.background = 'rgba(16, 185, 129, 0.1)';
-  } else if (percentage < 70) {
-    tag.textContent = 'Market Moderate';
-    tag.style.color = '#3b82f6';
-    tag.style.background = 'rgba(59, 130, 246, 0.1)';
-  } else {
-    tag.textContent = 'Premium Segment';
-    tag.style.color = '#f59e0b';
-    tag.style.background = 'rgba(245, 158, 11, 0.1)';
-  }
+ if (percentage > 70) {
+  tag.textContent = 'Highly Affordable';
+  tag.style.color = '#10b981';
+}
+else if (percentage > 35) {
+  tag.textContent = 'Market Moderate';
+  tag.style.color = '#3b82f6';
+}
+else {
+  tag.textContent = 'Premium Segment';
+  tag.style.color = '#f59e0b';
+}
 }
         function animateValue(obj, start, end, duration) {
             let startTimestamp = null;
